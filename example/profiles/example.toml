@@ -1,3 +1,7 @@
+[nexus]
+components = ["kitty"]
+
+
 [font]
 regular = "Liberation Mono"
 italic = "Liberation Serif"
