@@ -44,7 +44,3 @@ color14 <<colors.color14>>
 
 color7  <<colors.color7>>
 color15 <<colors.color15>>
-
-
-# Misc
-enable_audio_bell no

@@ -1,5 +1,6 @@
 [nexus]
 components = ["kitty"]
+generated_file_name = "nexus"
 
 
 [font]
