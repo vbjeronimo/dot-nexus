@@ -9,11 +9,16 @@ EXTENSIONS = {
     "kitty": ".conf"
 }
 
+MISSING_ARGS = "no_args"
+
 def get_parser() -> argparse.ArgumentParser:
     description = "A centralized .dotfiles management system."
     parser = argparse.ArgumentParser(prog="nexus", description=description)
 
-    parser.add_argument("--load", help="load a nexus profile (specified by profile name)")
+    parser.add_argument("-l", "--list", action="store_true",
+                        help="list the nexus profiles available to use")
+    parser.add_argument("-p","--load", nargs="?", const=MISSING_ARGS,
+                        help="load a nexus profile (specified by profile name)")
 
     return parser
 
@@ -25,8 +30,24 @@ def parse_args(parser: argparse.ArgumentParser) -> None:
         parser.print_help()
         sys.exit(1)
 
+    if args.list or args.load == MISSING_ARGS:
+        list_profiles()
+        sys.exit(0)
+
     if args.load:
         load_profile(args.load)
+        sys.exit(0)
+
+
+def list_profiles() -> None:
+    nexus_dir = Path.home().joinpath(".config", "nexus")
+    profiles_dir = nexus_dir.joinpath("profiles")
+
+    profiles = [file.stem for file in profiles_dir.iterdir()]
+
+    print("List of profiles available:")
+    for profile in profiles:
+        print(f"  - {profile}")
 
 
 def load_profile(profile_name: str) -> None:
