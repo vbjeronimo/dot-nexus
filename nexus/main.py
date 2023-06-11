@@ -1,7 +1,8 @@
 import argparse
-import tomllib
+import logging
 import re
 import sys
+import tomllib
 from pathlib import Path
 
 
@@ -96,7 +97,16 @@ def load_profile(profile_name: str) -> None:
             print(f"Generated file at '{generated_file.absolute()}' for component '{component}'.")
 
 
+def setup_logger() -> None:
+    logging.basicConfig(
+        format="[%(levelname)s] %(funcName)s: %(message)s",
+        level=logging.DEBUG,
+        stream=sys.stdout
+    )
+
+
 def main():
+    setup_logger()
 
     parser = get_parser()
     parse_args(parser)
