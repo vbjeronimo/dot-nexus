@@ -20,6 +20,8 @@ def get_parser() -> argparse.ArgumentParser:
                         help="list the nexus profiles available to use")
     parser.add_argument("-p","--load", nargs="?", const=MISSING_ARGS,
                         help="load a nexus profile (specified by profile name)")
+    parser.add_argument("-d", "--debug",action="store_true",
+                        help="turn on debug mode")
 
     return parser
 
@@ -30,6 +32,10 @@ def parse_args(parser: argparse.ArgumentParser) -> None:
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
+
+    if args.debug:
+        logger = logging.getLogger()
+        logger.setLevel(logging.DEBUG)
 
     if args.list or args.load == MISSING_ARGS:
         list_profiles()
@@ -100,7 +106,7 @@ def load_profile(profile_name: str) -> None:
 def setup_logger() -> None:
     logging.basicConfig(
         format="[%(levelname)s] %(funcName)s: %(message)s",
-        level=logging.DEBUG,
+        level=logging.WARNING,
         stream=sys.stdout
     )
 
