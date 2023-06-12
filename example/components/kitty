@@ -1,25 +1,16 @@
 # Font
 font_family      <<font.regular>>
+bold_font        <<font.bold>>
 italic_font      <<font.italic>>
-bold_font        auto
-bold_italic_font auto
+bold_italic_font <<font.bold_italic>>
 
 font_size <<font.size>>
-
-
-# Cursor
-cursor       <<colors.cursor>>
-cursor_shape block
-
-
-# URLs
-url_color <<colors.color14>>
-url_style curly
-
 
 # Colors
 foreground <<colors.foreground>>
 background <<colors.background>>
+url_color  <<colors.color14>>
+cursor     <<colors.cursor>>
 
 color0  <<colors.color0>>
 color8  <<colors.color8>>
