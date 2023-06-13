@@ -1,11 +1,13 @@
 [nexus]
-components = ["kitty"]
+components = ["kitty", "qtile"]
 generated_file_name = "nexus"
 
 
 [font]
 regular = "Liberation Mono"
+bold = "Liberation Mono"
 italic = "Liberation Serif"
+bold_italic = "Liberation Serif"
 size = 18
 
 

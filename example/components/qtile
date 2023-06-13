@@ -1,0 +1,17 @@
+colors = dict(
+    foreground="<<colors.foreground>>",
+    background="<<colors.background>>",
+    black="<<colors.color0>>",
+    red="<<colors.color1>>",
+    green="<<colors.color2>>",
+    yellow="<<colors.color3>>",
+    blue="<<colors.color4>>",
+    magenta="<<colors.color5>>",
+    cyan="<<colors.color6>>",
+    white="<<colors.color7>>",
+)
+
+font = dict(
+    family="<<font.regular>>",
+    size=<<font.size>>
+)
