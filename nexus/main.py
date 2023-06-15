@@ -58,70 +58,31 @@ def list_profiles() -> None:
 
 
 def load_profile(profile_name: str) -> None:
-    profile_to_load = None
-    for profile in PROFILES_DIR.iterdir():
-        if profile.stem == profile_name:
-            profile_to_load = profile
-            break
+    # 2. get the "nexus" part of the config
+    # 3. get list of components to update
+    # 4. load each component file
+    #    a. load component into a list of strings
+    #    b. go through each line and substitute the "<<keys>>" by a value
+    #    c. write updated component to file in the .config dir
 
-    if profile_to_load is None:
-        logging.error(f"Could not find profile '{profile_name}' in {PROFILES_DIR}.")
-        list_profiles()
-        return
-
-    with open(profile_to_load, "rb") as toml_file:
-        profile_contents = tomllib.load(toml_file)
-
-    nexus_config = profile_contents.get("nexus", None)
-    if nexus_config is None:
-        if not NEXUS_DIR.joinpath("nexus.toml").exists():
-            logging.error(f"Could not load the base config for Nexus. Exiting...")
-            sys.exit(1)
-
-        with open(NEXUS_DIR.joinpath("nexus.toml"), "rb") as nexus_file:
-            nexus_config = tomllib.load(nexus_file).get("nexus", {})
+    profile_contents = load_profile_config(profile_name)
+    nexus_config = load_nexus_config()
 
     components_to_update = nexus_config.get("components", None)
+    if components_to_update is None or components_to_update == []:
+        logging.error(f"Could not find list of components to update. Please add "
+                      "a 'components' list under the '[nexus]' header to your config.")
+        raise KeyError
 
-    if components_to_update is None:
-        # TODO: update this message. We're not defining 'components to load' only in profiles anymore
-        logging.error(f"Could not find list of components to update in {profile_to_load}. "
-                      f"Please add a 'components' list under the '[nexus]' header to your config.")
-        sys.exit(1)
-
-    logging.debug(f"Profile '{profile_to_load.stem}' updates the following components: {components_to_update}")
+    logging.debug(f"Profile '{profile_name}' updates the following components: {components_to_update}")
 
     for component in components_to_update:
-        component_to_load = COMPONENTS_DIR.joinpath(component)
-        if not component_to_load.exists():
-            logging.error(f"Could not find component '{component_to_load.stem}' in {COMPONENTS_DIR}.")
-            sys.exit(1)
-
-        component_contents = component_to_load.read_text().split("\n")
-
         logging.debug(f"Updating component '{component}'...")
 
-        updated_component = []
-        for line in component_contents:
-            re_match = re.search("<<(.*)>>", line)
+        component_contents = load_component_contents(component)
+        updated_component = upload_component(component_contents, profile_contents)
 
-            if re_match is None:
-                updated_component.append(line)
-                continue
-
-            keys = re_match.group(1).split(".")
-
-            nested_value: Any = profile_contents
-            for key in keys:
-                if key in nested_value:
-                    nested_value = nested_value[key]
-                else:
-                    logging.error(f"Key '{keys}' in component '{component}' not in {profile_to_load.name}. Double check your config ({profile_to_load}).")
-                    sys.exit(1)
-
-            updated_line = re.sub("<<.*>>", str(nested_value), line)
-            updated_component.append(updated_line)
-
+        # TODO: clean up this part
         updated_file_stem = nexus_config.get("generate_file_name", "nexus")
         updated_file_name = f"{updated_file_stem}{FILE_EXTENSIONS[component]}"
         updated_file_path = CONFIG_DIR.joinpath(component, updated_file_name)
@@ -131,6 +92,75 @@ def load_profile(profile_name: str) -> None:
         updated_file_path.parent.mkdir(parents=True, exist_ok=True)
         updated_file_path.write_text(updated_file_content)
         logging.info(f"Successfully updated component '{component}' at {updated_file_path}")
+
+
+def load_profile_config(profile_name: str) -> dict:
+    profile_to_load = None
+    for profile in PROFILES_DIR.iterdir():
+        if profile.stem == profile_name:
+            profile_to_load = profile
+            break
+
+    if profile_to_load is None:
+        logging.error(f"Could not find profile '{profile_name}' in {PROFILES_DIR}.")
+        list_profiles()
+
+        raise FileNotFoundError
+
+    with open(profile_to_load, "rb") as profile_toml:
+        profile_contents = tomllib.load(profile_toml)
+
+    return profile_contents
+
+
+def load_nexus_config() -> dict:
+    nexus_config_file = NEXUS_DIR.joinpath("nexus.toml")
+    if not nexus_config_file.exists():
+        logging.error(f"{nexus_config_file.absolute()} not found. "
+                      "Could not load the base config for Nexus. Exiting...")
+        raise FileNotFoundError
+
+    with open(nexus_config_file, "rb") as nexus_toml:
+        nexus_config = tomllib.load(nexus_toml).get("nexus", {})
+
+    return nexus_config
+
+
+def load_component_contents(component_name: str) -> list[str]:
+    component_to_load = COMPONENTS_DIR.joinpath(component_name)
+    if not component_to_load.exists():
+        logging.error(f"Could not find component '{component_name}' in {COMPONENTS_DIR}.")
+        raise FileNotFoundError
+
+    component_contents = component_to_load.read_text()
+
+    return component_contents.split("\n")
+
+
+def upload_component(component_contents: list[str], profile_contents: dict) -> list[str]:
+    updated_component = []
+    for line in component_contents:
+        re_match = re.search("<<(.*)>>", line)
+
+        if re_match is None:
+            updated_component.append(line)
+            continue
+
+        keys = re_match.group(1).split(".")
+
+        nested_value: Any = profile_contents
+        for key in keys:
+            if key in nested_value:
+                nested_value = nested_value[key]
+            else:
+                # TODO: write a more informative error message
+                #logging.error(f"Key '{keys}' in component '{component}' not in {profile_to_load.name}. Double check your config ({profile_to_load}).")
+                raise KeyError
+
+        updated_line = re.sub("<<.*>>", str(nested_value), line)
+        updated_component.append(updated_line)
+
+    return updated_component
 
 
 def main():
@@ -144,7 +174,12 @@ def main():
     PROFILES_DIR.mkdir(parents=True, exist_ok=True)
 
     parser = get_parser()
-    parse_args(parser)
+
+    try:
+        parse_args(parser)
+    except Exception as err:
+        logging.critical(err)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
