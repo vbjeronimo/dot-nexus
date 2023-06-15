@@ -58,13 +58,6 @@ def list_profiles() -> None:
 
 
 def load_profile(profile_name: str) -> None:
-    # 2. get the "nexus" part of the config
-    # 3. get list of components to update
-    # 4. load each component file
-    #    a. load component into a list of strings
-    #    b. go through each line and substitute the "<<keys>>" by a value
-    #    c. write updated component to file in the .config dir
-
     profile_contents = load_profile_config(profile_name)
     nexus_config = load_nexus_config()
 
