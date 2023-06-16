@@ -73,7 +73,7 @@ def load_profile(profile_name: str) -> None:
         logging.debug(f"Updating component '{component}'...")
 
         component_contents = load_component_contents(component)
-        updated_component = upload_component(component_contents, profile_contents)
+        updated_component = update_component(component_contents, profile_contents)
 
         # TODO: clean up this part
         updated_file_stem = nexus_config.get("generate_file_name", "nexus")
@@ -130,7 +130,7 @@ def load_component_contents(component_name: str) -> list[str]:
     return component_contents.split("\n")
 
 
-def upload_component(component_contents: list[str], profile_contents: dict) -> list[str]:
+def update_component(component_contents: list[str], profile_contents: dict) -> list[str]:
     updated_component = []
     for line in component_contents:
         re_match = re.search("<<(.*)>>", line)
