@@ -28,7 +28,12 @@ def load_profile(profile_name: str) -> None:
         logging.debug(f"Updating component '{component}'...")
 
         component_contents = components.load_component_contents(component)
-        updated_component_contents = components.update_component(component_contents, profile_contents)
+
+        try:
+            updated_component_contents = components.update_component(component_contents, profile_contents)
+        except KeyError as err:
+            raise KeyError(f"Could not update component '{component}' with the contents "
+                           f"of the profile '{profile_name}': {err}")
 
         components.write_updated_component(component, updated_component_contents)
 

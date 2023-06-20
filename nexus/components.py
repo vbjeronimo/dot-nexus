@@ -31,9 +31,7 @@ def update_component(component_contents: list[str], profile_contents: dict) -> s
             if key in nested_value:
                 nested_value = nested_value[key]
             else:
-                # TODO: write a more informative error message
-                #logging.error(f"Key '{keys}' in component '{component}' not in {profile_to_load.name}. Double check your config ({profile_to_load}).")
-                raise KeyError
+                raise KeyError(f"Key '{re_match.group(1)}' not in profile config.")
 
         updated_line = re.sub("<<.*>>", str(nested_value), line)
         updated_component.append(updated_line)
